@@ -61,16 +61,6 @@ class check_args_ex(object):
 
   def docondition(self, arg, condition):
     self.conditions[type(condition)](arg,condition)
-    """
-    if type(condition) == xrange and (type(arg) != int or arg not in condition):
-      raise BadArgument(str(arg) + " is not in " + str(condition)) 
-    
-    elif type(condition) in (list,tuple) and arg not in condition:
-      raise BadArgument(str(arg) + " is not in " + str(condition)) 
-
-    elif type(condition) == type and type(arg) != condition:
-      raise BadArgument(str(arg) + " is not of type " + str(condition)) 
-    """ 
 
   def __call__(self, function):
     def check_arguments(*args):
