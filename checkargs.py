@@ -6,6 +6,17 @@ class BadArgument(Exception):
 
 
 class check_args(object):
+  """
+  check_args allows you to simply type check arguments passed
+  into a function, without writing a lot of error prone
+  type checking code.
+
+  >>> @check_args(str,int)
+  ... def dostuff(name, age):
+  ...     print "name = %s age = %d" % (name,age)
+  >>> dostuff("Dave",5)
+  name = Dave age = 5
+  """
   def __init__(self, *args):
     self.types = args
 
@@ -17,12 +28,40 @@ class check_args(object):
       function(*args)
     return check_arguments
 
+def bail(error):
+  raise BadArgument(error)
 
 class check_args_ex(object):
+  """
+  Extended version of check_args, it allows you to test against multiple
+  conditions.  Handier, but takes more time.
+
+  >>> @check_args_ex(str,(int,xrange(10)))
+  ... def dostuff2(name, age):
+  ...     print "name = %s age = %d" % (name,age)
+ 
+  >>> dostuff2("Dave",5)
+  name = Dave age = 5
+  
+  >>> dostuff2("Dave",12)
+  Traceback (most recent call last):
+  BadArgument: '12 is not in xrange(10)'
+  """
+
   def __init__(self, *args):
     self.types = args
 
+
+  conditions = {
+    xrange: lambda arg, condition: (bail("%s is not in %s" % (str(arg),str(condition))) if arg not in condition else 1),
+    list:   lambda arg, condition: (bail("%s is not in %s" % (str(arg),str(condition))) if arg not in condition else 1),
+    tuple:  lambda arg, condition: (bail("%s is not in %s" % (str(arg),str(condition))) if arg not in condition else 1),
+    type:   lambda arg, condition: (bail("%s is not of type %s" % (str(arg),str(condition))) if type(arg) != condition else 1)
+  }
+
   def docondition(self, arg, condition):
+    self.conditions[type(condition)](arg,condition)
+    """
     if type(condition) == xrange and (type(arg) != int or arg not in condition):
       raise BadArgument(str(arg) + " is not in " + str(condition)) 
     
@@ -31,7 +70,7 @@ class check_args_ex(object):
 
     elif type(condition) == type and type(arg) != condition:
       raise BadArgument(str(arg) + " is not of type " + str(condition)) 
-      
+    """ 
 
   def __call__(self, function):
     def check_arguments(*args):
@@ -45,14 +84,10 @@ class check_args_ex(object):
     return check_arguments
 
 
+if __name__ == "__main__":
+  import doctest
+  doctest.testmod()
 
-@check_args(str,int,float)
-@check_args_ex(str, (int,[1,2,3,4,5],xrange(3,8)), float)
-def func(name,numstuff,percent):
-  print "%s %d %f" % (name,numstuff,percent)
-
-
-func("hello", 2, 1.5)
 
 
 
