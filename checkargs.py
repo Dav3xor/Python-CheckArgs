@@ -45,14 +45,19 @@ class check_args_ex(object):
   conditional checking can check to see if an integer is
   within an xrange, or in a list/tuple/dictionary.
 
+  each argument for the decorated function is specified
+  as a list or tuple, the first item is either a type, or
+  list of types, the second is a conditional or a 
+  list of conditionals.
+
   WARNING:  If you want to pass in a single list or tuple,
   it must be enclosed in another list or tuple
   
-  >>> @check_args_ex((str,None),
-  ...                (int, (xrange(10),(5,9))),
-  ...                ((str,int),[('Jan','Feb','Mar','Apr','May')]))
+  >>> @check_args_ex(((str, unicode), None),
+  ...                (int, (xrange(10), (5,9))),
+  ...                ((str, unicode), {'Jan':1, 'Feb':1, 'Mar':1, 'Apr':1, 'May':1}))
   ... def dostuff2(name, age, month):
-  ...     print "name = %s age = %d month = %s" % (name,age,month)
+  ...   print "name = %s age = %d month = %s" % (name,age,month)
  
   >>> dostuff2("Dave",5,'May')
   name = Dave age = 5 month = May
@@ -65,8 +70,8 @@ class check_args_ex(object):
   >>> dostuff2("Dave",9,'Mayx')
   Traceback (most recent call last):
       ...
-  BadArgument: "Mayx is not in ('Jan', 'Feb', 'Mar', 'Apr', 'May')"
-
+  BadArgument: "Mayx is not in {'Jan': 1, 'Apr': 1, 'Mar': 1, 'Feb': 1, 'May': 1}"
+  
   You can also use a function:
 
   >>> def isvalid(arg):
@@ -110,6 +115,9 @@ class check_args_ex(object):
               (bail("%s is not in %s" % (str(arg),str(condition))) 
               if arg not in condition else 1),
     tuple:    lambda arg, condition: \
+              (bail("%s is not in %s" % (str(arg),str(condition))) 
+              if arg not in condition else 1),
+    dict:     lambda arg, condition: \
               (bail("%s is not in %s" % (str(arg),str(condition))) 
               if arg not in condition else 1)
   }
