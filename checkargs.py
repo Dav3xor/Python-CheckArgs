@@ -31,10 +31,6 @@ class check_args(object):
       function(*args)
     return check_arguments
 
-# need a function for raising exceptions inside of
-# list comprehensions, etc.
-def bail(error):
-  raise BadArgument(error)
 
 class check_args_ex(object):
   """
@@ -101,36 +97,39 @@ class check_args_ex(object):
                        for i in self.types]
     self.conditions = [(i,) if type(i) not in (list, tuple) else i 
                        for i in self.conditions]
+  
+  def bail(self, error):
+    raise BadArgument(error)
 
   condition_functions = {
-    types.FunctionType: lambda arg, condition: \
+    types.FunctionType: lambda arg, condition, bail: \
                         (bail("%s fails function %s" % (str(arg),condition.func_name)) \
                         if not condition(arg) else 1),
-    types.NoneType:     lambda arg, conditions: \
+    types.NoneType:     lambda arg, conditions, bail: \
                         True,
-    xrange:   lambda arg, condition: \
+    xrange:   lambda arg, condition, bail: \
               (bail("%s is not in %s" % (str(arg),str(condition))) 
               if arg not in condition else 1),
-    list:     lambda arg, condition: \
+    list:     lambda arg, condition, bail: \
               (bail("%s is not in %s" % (str(arg),str(condition))) 
               if arg not in condition else 1),
-    tuple:    lambda arg, condition: \
+    tuple:    lambda arg, condition, bail: \
               (bail("%s is not in %s" % (str(arg),str(condition))) 
               if arg not in condition else 1),
-    dict:     lambda arg, condition: \
+    dict:     lambda arg, condition, bail: \
               (bail("%s is not in %s" % (str(arg),str(condition))) 
               if arg not in condition else 1)
   }
 
   def docondition(self, arg, condition):
-    self.condition_functions[type(condition)](arg,condition)
+    self.condition_functions[type(condition)](arg,condition,self.bail)
 
   def doconditionals(self, arg, conditionals):
     [self.docondition(arg,conditional) for conditional in conditionals]
 
   def dotypes(self, arg, types):
     if len(types) and type(arg) not in types:
-      bail("%s is illegal type %s, legal types are: %s" % \
+      self.bail("%s is illegal type %s, legal types are: %s" % \
            (str(arg), type(arg).__name__,
             str([type(i).__name__ for i in types])))
 
